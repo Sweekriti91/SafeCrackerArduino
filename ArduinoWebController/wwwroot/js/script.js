@@ -2,12 +2,16 @@
 let gameState = {
     attemptsLeft: 3,
     score: 0,
-    isPoweredOn: false
+    isPoweredOn: false,
+    difficulty: 1 // Default to Moderate
 };
 
 // Initialize UI
 document.addEventListener('DOMContentLoaded', function() {
     updateUIFromState();
+    
+    // Set the default difficulty radio button
+    document.getElementById('difficultyModerate').checked = true;
 });
 
 function updateUIFromState() {
@@ -109,3 +113,41 @@ function updateGameInfo(debugData) {
 
 // Auto-refresh debug output every 2 seconds
 setInterval(refreshDebug, 2000);
+
+// Function to set the difficulty level
+async function setDifficulty(level) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.textContent = 'Setting difficulty...';
+    statusDiv.className = 'status';
+    
+    try {
+        const response = await fetch('/difficulty', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ level: level })
+        });
+        
+        if(response.ok) {
+            const result = await response.text();
+            statusDiv.textContent = result;
+            statusDiv.className = 'status success';
+            
+            // Update local game state
+            gameState.difficulty = level;
+            
+            // Log to console
+            console.log('Difficulty set to:', level);
+            
+            // Refresh debug output
+            refreshDebug();
+        } else {
+            statusDiv.textContent = 'Error: ' + response.statusText;
+            statusDiv.className = 'status error';
+        }
+    } catch (error) {
+        statusDiv.textContent = 'Error: ' + error.message;
+        statusDiv.className = 'status error';
+    }
+}

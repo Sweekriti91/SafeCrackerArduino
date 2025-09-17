@@ -135,6 +135,51 @@ app.MapPost("/lock", () =>
     }
 });
 
+// Difficulty setting endpoint
+app.MapPost("/difficulty", async (HttpContext context) =>
+{
+    if (serialPort == null || !serialPort.IsOpen)
+    {
+        return Results.BadRequest("Arduino not connected");
+    }
+    
+    // Read the request body
+    using var reader = new StreamReader(context.Request.Body);
+    var body = await reader.ReadToEndAsync();
+    
+    try
+    {
+        // Parse the JSON
+        var json = System.Text.Json.JsonDocument.Parse(body);
+        var level = json.RootElement.GetProperty("level").GetInt32();
+        
+        // Validate difficulty level (0=Easy, 1=Moderate, 2=Hard)
+        if (level < 0 || level > 2)
+        {
+            return Results.BadRequest("Invalid difficulty level. Must be 0, 1, or 2.");
+        }
+        
+        // Send command to Arduino
+        string command = $"D:{level}";
+        debugOutput.AppendLine($"[{DateTime.Now:HH:mm:ss.fff}] Sending: {command}");
+        serialPort.WriteLine(command);
+        
+        string difficultyName = level switch
+        {
+            0 => "Easy",
+            1 => "Moderate",
+            2 => "Hard",
+            _ => "Unknown"
+        };
+        
+        return Results.Ok($"Difficulty set to {difficultyName}");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest($"Error: {ex.Message}");
+    }
+});
+
 // Cleanup on shutdown
 app.Lifetime.ApplicationStopping.Register(() =>
 {

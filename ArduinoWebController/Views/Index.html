@@ -21,6 +21,25 @@
                 </div>
                 <div id="status" class="status" style="flex: 1; margin-left: 10px;"></div>
             </div>
+            <div style="display: flex; flex-direction: column; align-items: center; margin-top: 15px; margin-bottom: 15px;">
+                <div class="difficulty-container">
+                    <label class="difficulty-label">Difficulty:</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="difficultyEasy" name="difficulty" value="0" onclick="setDifficulty(0)">
+                            <label for="difficultyEasy">Easy</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="difficultyModerate" name="difficulty" value="1" onclick="setDifficulty(1)" checked>
+                            <label for="difficultyModerate">Moderate</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="difficultyHard" name="difficulty" value="2" onclick="setDifficulty(2)">
+                            <label for="difficultyHard">Hard</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div style="display: flex; justify-content: center; margin-top: 20px;">
                 <button class="lock-button" onclick="sendCommand('lock')" style="width: 60%; font-size: 20px;">LOCK-IN</button>
             </div>
