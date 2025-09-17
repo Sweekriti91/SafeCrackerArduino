@@ -1,54 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Arduino Debug Control Panel</title>
+    <title>Safe Cracker Control Panel</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>ARDUINO DEBUG CONTROL PANEL</h1>
-            <p>Arduino Connection: <span style="color: {{CONNECTION_COLOR}}">{{CONNECTION_STATUS}}</span></p>
+        <div class="header vault-panel">
+            <h1>SAFE CRACKER CONTROL PANEL</h1>
+            <p>System Status: <span class="connection-status" style="color: {{CONNECTION_COLOR}}">{{CONNECTION_STATUS}}</span></p>
         </div>
 
-        <div class="panel">
-            <h3>Controls</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <button id="powerButton" class="power-button" onclick="sendCommand('on')" style="flex: 0 0 120px;">POWER ON</button>
-                <div id="gameInfo" style="font-size: 14px; text-align: center;">
-                    <div>Attempts: <span id="attempts">3</span></div>
-                    <div>Score: <span id="score">0</span></div>
+        <div class="panel control-panel">
+            <h3 class="panel-title">CONTROLS</h3>
+            <div class="control-row">
+                <button id="powerButton" class="power-button" onclick="sendCommand('on')">POWER ON</button>
+                <div class="status-display">
+                    <div id="status" class="status"></div>
                 </div>
-                <div id="status" class="status" style="flex: 1; margin-left: 10px;"></div>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center; margin-top: 15px; margin-bottom: 15px;">
+            
+            <div class="game-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Attempts Left</div>
+                    <div class="stat-value"><span id="attempts">3</span></div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value"><span id="score">0</span></div>
+                </div>
+            </div>
+            
+            <div class="difficulty-section">
                 <div class="difficulty-container">
-                    <label class="difficulty-label">Difficulty:</label>
+                    <label class="difficulty-label">SECURITY LEVEL</label>
                     <div class="radio-group">
                         <div class="radio-option">
                             <input type="radio" id="difficultyEasy" name="difficulty" value="0" onclick="setDifficulty(0)">
-                            <label for="difficultyEasy">Easy</label>
+                            <label for="difficultyEasy">Low</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="difficultyModerate" name="difficulty" value="1" onclick="setDifficulty(1)" checked>
-                            <label for="difficultyModerate">Moderate</label>
+                            <label for="difficultyModerate">Medium</label>
                         </div>
                         <div class="radio-option">
                             <input type="radio" id="difficultyHard" name="difficulty" value="2" onclick="setDifficulty(2)">
-                            <label for="difficultyHard">Hard</label>
+                            <label for="difficultyHard">High</label>
                         </div>
                     </div>
                 </div>
             </div>
-            <div style="display: flex; justify-content: center; margin-top: 20px;">
-                <button class="lock-button" onclick="sendCommand('lock')" style="width: 60%; font-size: 20px;">LOCK-IN</button>
+            
+            <div class="lock-in-section">
+                <button class="lock-button" onclick="sendCommand('lock')">LOCK-IN POSITION</button>
             </div>
         </div>
 
-        <div class="panel">
-            <h3>Serial Debug Output</h3>
+        <div class="panel debug-panel">
+            <h3 class="panel-title">SYSTEM LOG</h3>
             <div id="debugOutput" class="debug">{{DEBUG_OUTPUT}}</div>
-            <button onclick="clearDebug()" style="margin-top: 10px; background-color: #7f8c8d; color: white;">Clear Debug</button>
+            <button onclick="clearDebug()" class="clear-button">CLEAR LOG</button>
         </div>
     </div>
 
