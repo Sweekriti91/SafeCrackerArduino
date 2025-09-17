@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arduino Debug Control Panel</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ARDUINO DEBUG CONTROL PANEL</h1>
+            <p>Arduino Connection: <span style="color: {{CONNECTION_COLOR}}">{{CONNECTION_STATUS}}</span></p>
+        </div>
+
+        <div class="panel">
+            <h3>Controls</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <button id="powerButton" class="power-button" onclick="sendCommand('on')" style="flex: 0 0 120px;">POWER ON</button>
+                <div id="gameInfo" style="font-size: 14px; text-align: center;">
+                    <div>Attempts: <span id="attempts">3</span></div>
+                    <div>Score: <span id="score">0</span></div>
+                </div>
+                <div id="status" class="status" style="flex: 1; margin-left: 10px;"></div>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                <button class="lock-button" onclick="sendCommand('lock')" style="width: 60%; font-size: 20px;">LOCK-IN</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Serial Debug Output</h3>
+            <div id="debugOutput" class="debug">{{DEBUG_OUTPUT}}</div>
+            <button onclick="clearDebug()" style="margin-top: 10px; background-color: #7f8c8d; color: white;">Clear Debug</button>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>
