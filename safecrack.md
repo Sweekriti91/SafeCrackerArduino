@@ -41,9 +41,9 @@ A physical combination lock puzzle game that combines servo-controlled dial move
 ### LED Feedback System
 ```
 🔴🔵 Red + Blue:     VERY COLD (>40° away)
-� Blue only:        COOL (25-40° away)
+🔵 Blue only:        COOL (25-40° away)
 🟠 Orange only:      WARM (15-25° away)  
-��🟢 Orange + Green:  HOT (5-15° away)
+🟠🟢 Orange + Green:  HOT (5-15° away)
 🟢 Green only:       VERY HOT! (<5° away)
 ```
 
