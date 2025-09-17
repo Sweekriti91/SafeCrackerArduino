@@ -98,6 +98,9 @@ void handleSerialInput() {
     String command = Serial.readStringUntil('\n');
     command.trim();
     
+    Serial.print("RECEIVED COMMAND: ");
+    Serial.println(command);
+    
     if (command == "P") {
       // Power ON command from web
       startGame();
