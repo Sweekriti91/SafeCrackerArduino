@@ -9,6 +9,11 @@ const int numLeds = 4;
 // LED indices for easy reference
 const int ORANGE = 0, RED = 1, GREEN = 2, BLUE = 3;
 
+// Cam Lock Positions for 3D Printed Sliding Lid
+const int LOCKED_ANGLE = 0;      // Cam flat edge blocks lid
+const int UNLOCKED_ANGLE = 120;  // Cam round edge allows sliding
+const int FULL_OPEN_ANGLE = 180; // Full celebration position
+
 // Function declarations
 void generateNewCombination();
 void displayGameInfo();
@@ -31,6 +36,7 @@ void startGame();
 void endGame();
 void sendGameStatus();
 void testAllLEDs();
+void displayLockStatus();
 
 // Game components
 Servo safeDial;
@@ -70,12 +76,13 @@ void setup() {
     digitalWrite(ledPins[i], LOW);
   }
   
-  // Initialize servo
+  // Initialize servo and lock safe
   safeDial.attach(servoPin);
-  safeDial.write(90);  // Park in center
+  safeDial.write(LOCKED_ANGLE);  // Start locked
   
-  Serial.println("=== SAFE-CRACKER WEB CONTROL ===");
+  Serial.println("=== SAFE-CRACKER WITH CAM-LOCK LID ===");
   Serial.println("STATUS:STANDBY");
+  displayLockStatus();
   
   // Show power-off state
   gameOffMode();
@@ -117,6 +124,20 @@ void handleSerialInput() {
       // Test all LEDs
       testAllLEDs();
     }
+    else if (command == "U") {
+      // Debug: Manual unlock
+      Serial.println("DEBUG: Manual unlock");
+      safeDial.write(UNLOCKED_ANGLE);
+      delay(500);
+      displayLockStatus();
+    }
+    else if (command == "K") {
+      // Debug: Manual lock
+      Serial.println("DEBUG: Manual lock");
+      safeDial.write(LOCKED_ANGLE);
+      delay(500);
+      displayLockStatus();
+    }
     else if (command.startsWith("D:")) {
       // Set difficulty: D:0 (Easy), D:1 (Normal), D:2 (Expert)
       difficulty = command.substring(2).toInt();
@@ -124,6 +145,15 @@ void handleSerialInput() {
       Serial.print("DIFFICULTY:");
       Serial.println(difficulty);
     }
+  }
+}
+
+void displayLockStatus() {
+  int currentPos = safeDial.read();
+  if(currentPos >= UNLOCKED_ANGLE - 10) {
+    Serial.println("LOCK_STATUS:UNLOCKED - Lid can slide open!");
+  } else {
+    Serial.println("LOCK_STATUS:LOCKED - Cam blocking lid");
   }
 }
 
@@ -165,6 +195,11 @@ void startGame() {
     Serial.print("DIFFICULTY:");
     Serial.println(difficulty);
     
+    // Lock the safe at start
+    safeDial.write(LOCKED_ANGLE);
+    delay(500);
+    displayLockStatus();
+    
     // Welcome sequence
     performWelcomeAnimation();
     
@@ -185,9 +220,11 @@ void endGame() {
     Serial.print("FINAL_SCORE:");
     Serial.println(score);
     
-    // Turn off all LEDs and park servo
+    // Lock safe and turn off all LEDs
+    safeDial.write(LOCKED_ANGLE);
     allLEDsOff();
-    safeDial.write(90);
+    delay(500);
+    displayLockStatus();
     
     // Show standby mode
     gameOffMode();
@@ -197,8 +234,8 @@ void endGame() {
 void generateNewCombination() {
   Serial.println("STATUS:GENERATING_COMBINATION");
   
-  // Generate single target angle between 20 and 160 degrees
-  targetAngle = random(20, 160);
+  // Generate single target angle between 20 and 90 degrees (keep in sweep range)
+  targetAngle = random(20, 90);
   
   attemptsRemaining = 3;
 }
@@ -220,7 +257,7 @@ void displayGameInfo() {
 void startNewRound() {
   gameActive = true;
   sweeping = true;
-  currentAngle = 0;
+  currentAngle = LOCKED_ANGLE;  // Start from locked position
   sweepDirection = 1;
   
   safeDial.write(currentAngle);
@@ -265,10 +302,8 @@ void attemptLockIn() {
     Serial.print("TOTAL_SCORE:");
     Serial.println(score);
     
-    // Success animation
+    // Success animation then unlock
     successAnimation();
-    
-    // Safe unlocked!
     safeUnlocked();
     
   } else {
@@ -284,7 +319,7 @@ void attemptLockIn() {
       // Game over
       gameOver();
     } else {
-      // Try again
+      // Try again - return to sweeping
       delay(1500);
       sweeping = true;
       Serial.println("STATUS:SWEEPING");
@@ -301,9 +336,9 @@ void updateSweeping() {
     // Move servo based on difficulty speed
     currentAngle += sweepDirection * SWEEP_SPEED[difficulty];
     
-    // Reverse direction at limits
-    if(currentAngle >= 180) {
-      currentAngle = 180;
+    // Don't go past 90° during gameplay (keep it locked)
+    if(currentAngle >= 90) {
+      currentAngle = 90;
       sweepDirection = -1;
     } else if(currentAngle <= 0) {
       currentAngle = 0;
@@ -368,15 +403,26 @@ void sendGameStatus() {
 void safeUnlocked() {
   gameActive = false;
   
+  Serial.println("");
+  Serial.println("🎉 *** SAFE CRACKED! *** 🎉");
   Serial.println("STATUS:SAFE_UNLOCKED");
   Serial.print("FINAL_SCORE:");
   Serial.println(score);
   Serial.print("ATTEMPTS_USED:");
   Serial.println(attemptsUsed);
   
+  // Move to unlock position first
+  Serial.println("Unlocking safe...");
+  safeDial.write(UNLOCKED_ANGLE);
+  delay(1000);  // Give time to see the unlock
+  displayLockStatus();
+  
   // Epic unlock animation
   unlockAnimation();
   
+  // Keep in unlocked position
+  safeDial.write(UNLOCKED_ANGLE);
+  Serial.println("🔓 Slide the lid open to claim your prize!");
   Serial.println("STATUS:GAME_COMPLETE");
 }
 
@@ -389,9 +435,15 @@ void gameOver() {
   Serial.print("FINAL_SCORE:");
   Serial.println(score);
   
+  // Lock the safe
+  safeDial.write(LOCKED_ANGLE);
+  delay(500);
+  displayLockStatus();
+  
   // Alarm animation
   alarmAnimation();
   
+  Serial.println("Safe is locked. Press switch to try again!");
   Serial.println("STATUS:RESTART_AVAILABLE");
 }
 
@@ -422,32 +474,39 @@ void allLEDsOn() {
 void performWelcomeAnimation() {
   Serial.println("STATUS:WELCOME_ANIMATION");
   
-  // Servo sweep with LED chase
-  for(int angle = 0; angle <= 180; angle += 10) {
+  // Servo sweep with LED chase (limited range to stay locked)
+  for(int angle = 0; angle <= 90; angle += 10) {
     safeDial.write(angle);
     
     // LED chase effect
     allLEDsOff();
-    int ledIndex = map(angle, 0, 180, 0, numLeds - 1);
+    int ledIndex = map(angle, 0, 90, 0, numLeds - 1);
     digitalWrite(ledPins[ledIndex], HIGH);
     
     delay(100);
   }
   
-  // Return to start
-  safeDial.write(0);
+  // Return to locked position
+  safeDial.write(LOCKED_ANGLE);
   allLEDsOff();
   delay(500);
 }
 
 void successAnimation() {
-  // Flash green LED
+  // Flash green LED and tease unlock progress
   for(int i = 0; i < 5; i++) {
     digitalWrite(ledPins[GREEN], HIGH);
     delay(200);
     digitalWrite(ledPins[GREEN], LOW);
     delay(200);
   }
+  
+  // Tease unlock by moving slightly toward unlock angle
+  int teaseAngle = 60;  // Partway to unlock
+  safeDial.write(teaseAngle);
+  delay(500);
+  safeDial.write(LOCKED_ANGLE);
+  delay(300);
 }
 
 void failureAnimation() {
@@ -484,19 +543,15 @@ void unlockAnimation() {
     delay(150);
   }
   
-  // Final celebration with servo
+  // Final celebration - show unlock motion
   for(int i = 0; i < 3; i++) {
-    // Servo full rotation to simulate unlocking
-    for(int angle = 0; angle <= 180; angle += 20) {
-      safeDial.write(angle);
-      allLEDsOn();
-      delay(50);
-      allLEDsOff();
-      delay(50);
-    }
+    safeDial.write(FULL_OPEN_ANGLE);
+    allLEDsOn();
+    delay(300);
+    allLEDsOff();
+    safeDial.write(UNLOCKED_ANGLE);
+    delay(300);
   }
-  
-  safeDial.write(90); // Park in middle
 }
 
 void alarmAnimation() {
@@ -508,13 +563,13 @@ void alarmAnimation() {
     delay(100);
   }
   
-  // Servo shaking motion
+  // Servo shaking motion (but keep it locked)
   for(int i = 0; i < 5; i++) {
-    safeDial.write(45);
+    safeDial.write(30);
     delay(200);
-    safeDial.write(135);
+    safeDial.write(60);
     delay(200);
   }
   
-  safeDial.write(90); // Return to center
+  safeDial.write(LOCKED_ANGLE); // Return to locked
 }
